@@ -15,12 +15,12 @@ https://stark-everglades-40861.herokuapp.com/
 var express = require("express");
 var multer = require("multer");
 var exphbs = require('express-handlebars');
-const Sequelize = require('sequelize');
+// const Sequelize = require('sequelize');
+const fs = require('fs');
 var app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const fs = require('fs');
 var path = require("path");
 
 var HTTP_PORT = process.env.PORT || 8080;
@@ -64,15 +64,18 @@ app.set("view engine", ".hbs");
 const upload = multer({ storage: storage });
 
 // set up sequelize to point to our postgres database
-var sequelize = new Sequelize('hzuhrafk', 'hzuhrafk', 'oCB59viJeMZ6FyO7FHhAS0T0oi0Xmvy1', {
-    host: 'hansken.db.elephantsql.com',
-    dialect: 'postgres',
-    port: 5432,
-    dialectOptions: {
-        ssl: { rejectUnauthorized: false }
-    },
-    query: { raw: true }
-});
+// var sequelize = new Sequelize('hzuhrafk', 'hzuhrafk', 'oCB59viJeMZ6FyO7FHhAS0T0oi0Xmvy1', {
+//     host: 'hansken.db.elephantsql.com',
+//     dialect: 'postgres',
+//     port: 5432,
+//     dialectOptions: {
+//         ssl: { rejectUnauthorized: false }
+//     },
+//     query: { raw: true }
+// });
+
+// sequelize.authenticate().then(() => console.log('Connection success.'))
+//     .catch((err) => console.log("Unable to connect to DB.", err));
 
 // sequelize.authenticate().then(function () {
 //     console.log('Connection has been established successfully.');
@@ -82,35 +85,35 @@ var sequelize = new Sequelize('hzuhrafk', 'hzuhrafk', 'oCB59viJeMZ6FyO7FHhAS0T0o
 
 // Define a "Project" model
 
-var Project = sequelize.define('Project', {
-    project_id: {
-        type: Sequelize.INTEGER,
-        primaryKey: true, // use "project_id" as a primary key
-        autoIncrement: true // automatically increment the value
-    },
-    title: Sequelize.STRING,
-    description: Sequelize.TEXT
-}, {
-    createdAt: false, // disable createdAt
-    updatedAt: false // disable updatedAt
-});
+// var Project = sequelize.define('Project', {
+//     project_id: {
+//         type: Sequelize.INTEGER,
+//         primaryKey: true, // use "project_id" as a primary key
+//         autoIncrement: true // automatically increment the value
+//     },
+//     title: Sequelize.STRING,
+//     description: Sequelize.TEXT
+// }, {
+//     createdAt: false, // disable createdAt
+//     updatedAt: false // disable updatedAt
+// });
 
 // synchronize the Database with our models and automatically add the 
 // table if it does not exist
 
-sequelize.sync().then(function () {
+// sequelize.sync().then(function () {
 
-    // create a new "Project" and add it to the database
-    Project.create({
-        title: 'Project1',
-        description: 'First Project'
-    }).then(function (project) {
-        // you can now access the newly created Project via the variable project
-        console.log("success!")
-    }).catch(function (error) {
-        console.log("something went wrong!");
-    });
-});
+//     // create a new "Project" and add it to the database
+//     Project.create({
+//         title: 'Project1',
+//         description: 'First Project'
+//     }).then(function (project) {
+//         // you can now access the newly created Project via the variable project
+//         console.log("success!")
+//     }).catch(function (error) {
+//         console.log("something went wrong!");
+//     });
+// });
 
 app.use(function (req, res, next) {
     let route = req.baseUrl + req.path;
@@ -131,43 +134,88 @@ app.get("/images/add", function (req, res) {
 });
 
 app.get("/employees/add", function (req, res) {
-    res.render('addEmployee')
+    data.getDepartments(req.body).then((data) => {
+        res.render("addEmployee", { departments: data })
+    }).catch(() => {
+        res.render("addEmployee", { departments: [] })
+    });
+});
+
+app.post("/employees/add", (req, res) => {
+    data.addEmployee(req.body).then((data) => {
+        res.redirect("/employees");
+    }).catch(() => {
+        console.log("unable to add employee")
+    });
+});
+
+app.post("/departments/add", (req, res) => {
+    data.addDepartment(req.body).then(() => {
+        res.redirect("/departments/add")
+    }).catch((err) => {
+        console.log(err);
+    });
 });
 
 app.get("/employees", (req, res) => {
     if (req.query.status) {
         data.getEmployeesByStatus(req.query.status).then((data) => {
-            res.render("employees", { employees: data })
+            if (data.length > 0) {
+                res.render("employees", { employees: data })
+            }
+            else {
+                res.render("employees", { message: "No Results!!" })
+            }
         }).catch((err) => {
             res.json({ ERROR: err });
         })
     }
     else if (req.query.department) {
         data.getEmployeesByDepartment(req.query.department).then((data) => {
-            res.render("employees", { employees: data })
+            if (data.length > 0) {
+                res.render("employees", { employees: data })
+            }
+            else {
+                res.render("employees", { message: "No Results!!" })
+            }
         }).catch((err) => {
             res.json({ ERROR: err });
         })
     }
     else if (req.query.manager) {
         data.getEmployeesByManager(req.query.manager).then((data) => {
-            res.render("employees", { employees: data })
+            if (data.length > 0) {
+                res.render("employees", { employees: data })
+            }
+            else {
+                res.render("employees", { message: "No Results!!" })
+            }
         }).catch((err) => {
             res.render({ message: "no results" });
         })
     }
     else {
         data.getAllEmployees().then((data) => {
-            res.render("employees", { employees: data })
+            if (data.length > 0) {
+                res.render("employees", { employees: data })
+            }
+            else {
+                res.render("employees", { message: "No Results!!" })
+            }
         }).catch((err) => {
-            res.render({ message: "no results" });
+            res.render({ message: err });
         });
     }
 });
 
 app.get("/departments", (req, res) => {
     data.getDepartments().then((data) => {
-        res.render("departments", { departments: data });
+        if (data.length > 0) {
+            res.render("departments", { departments: data })
+        }
+        else {
+            res.render("departments", { message: "No Results!!" })
+        }
     }).catch((err) => {
         console.log(err);
     });
@@ -195,21 +243,41 @@ app.post("/images/add", upload.single("imageFile"), (req, res) => {
     })
 })
 
-app.post("/employees/add", (req, res) => {
-    data.addEmployee(req.body).then(() => {
-        res.redirect("/employees")
-    }).catch((err) => {
-        console.log(err);
-    });
-});
 
-app.get("/employee/:value", (req, res) => {
-    data.getEmployeeByNum(req.params.value).then((data) => {
-        res.render("employee", { employee: data });
-    }).catch((err) => {
-        res.render("employee", { message: "no results" });
-    })
-})
+
+app.get("/employee/:empNum", (req, res) => {
+    // initialize an empty object to store the values
+    let viewData = {};
+    data.getEmployeeByNum(req.params.empNum).then((data) => {
+        if (data) {
+            viewData.employee = data; //store employee data in the "viewData" object as "employee"
+        } else {
+            viewData.employee = null; // set employee to null if none were returned
+        }
+    }).catch(() => {
+        viewData.employee = null; // set employee to null if there was an error
+    }).then(data.getDepartments)
+        .then((data) => {
+            viewData.departments = data; // store department data in the "viewData" object as "departments"
+            // loop through viewData.departments and once we have found the departmentId that matches
+            // the employee's "department" value, add a "selected" property to the matching
+            // viewData.departments object
+            for (let i = 0; i < viewData.departments.length; i++) {
+                if (viewData.departments[i].departmentId == viewData.employee[0].department) {
+                    viewData.departments[i].selected = true;
+                }
+            }
+        }).catch(() => {
+            viewData.departments = []; // set departments to empty if there was an error
+        }).then(() => {
+            if (viewData.employee == null) { // if no employee - return an error
+                res.status(404).send("Employee Not Found");
+            } else {
+                console.log(viewData.employee[0].firstName)
+                res.render("employee", { viewData: viewData }); // render the "employee" view
+            }
+        });
+});
 
 app.post("/employee/update", (req, res) => {
     data.updateEmployee(req.body).then(() => {
@@ -218,6 +286,39 @@ app.post("/employee/update", (req, res) => {
         console.log(err);
     })
 });
+
+app.get("/departments/add", (req, res) => {
+    res.render('addDepartment');
+})
+
+app.post("/department/update", (req, res) => {
+    data.updateDepartment(req.body).then(() => {
+        res.redirect("/departments");
+    }).catch((err) => {
+        console.log(err);
+    })
+});
+
+app.get("/department/:departmentId", (req, res) => {
+    data.getDepartmentById(req.params.departmentId).then((data) => {
+        if (data == undefined) {
+            res.status(404).send("Department Not Found");
+        }
+        else {
+            res.render("department", { department: data });
+        }
+    }).catch((err) => {
+        res.status(404).send("Department Not Found");
+    })
+})
+
+app.get("/employees/delete/:empNum", (req, res) => {
+    data.deleteEmployeeByNum(req.params.empNum).then(() => {
+        res.redirect("/employees");
+    }).catch((err) => {
+        res.status(500).send("Unable to Remove Employee / Employee not found)");
+    })
+})
 
 app.get("*", (req, res) => {
     res.sendFile(path.join(__dirname, "./views/404.html"));
