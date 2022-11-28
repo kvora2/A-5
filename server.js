@@ -1,21 +1,20 @@
 /*************************************************************************
-* BTI325– Assignment 4
+* BTI325– Assignment 5
 * I declare that this assignment is my own work in accordance with Seneca Academic
 Policy. No part * of this assignment has been copied manually or electronically from any
 other source
 * (including 3rd party web sites) or distributed to other students.
 *
-* Name: Kelvin Vora  Student ID: 157616210 Date: 13th Nov 2022
+* Name: Kelvin Vora  Student ID: 157616210 Date: 28th Nov 2022
 *
 * Your app’s URL (from Heroku) : 
-https://stark-everglades-40861.herokuapp.com/
+https://tender-suspenders-crab.cyclic.app
 *
 **************************************************************************/
 
 var express = require("express");
 var multer = require("multer");
 var exphbs = require('express-handlebars');
-// const Sequelize = require('sequelize');
 const fs = require('fs');
 var app = express();
 app.use(express.json());
@@ -62,58 +61,6 @@ app.engine('.hbs', exphbs.engine({
 app.set("view engine", ".hbs");
 
 const upload = multer({ storage: storage });
-
-// set up sequelize to point to our postgres database
-// var sequelize = new Sequelize('hzuhrafk', 'hzuhrafk', 'oCB59viJeMZ6FyO7FHhAS0T0oi0Xmvy1', {
-//     host: 'hansken.db.elephantsql.com',
-//     dialect: 'postgres',
-//     port: 5432,
-//     dialectOptions: {
-//         ssl: { rejectUnauthorized: false }
-//     },
-//     query: { raw: true }
-// });
-
-// sequelize.authenticate().then(() => console.log('Connection success.'))
-//     .catch((err) => console.log("Unable to connect to DB.", err));
-
-// sequelize.authenticate().then(function () {
-//     console.log('Connection has been established successfully.');
-// }).catch(function (err) {
-//     console.log('Unable to connect to the database:', err);
-// });
-
-// Define a "Project" model
-
-// var Project = sequelize.define('Project', {
-//     project_id: {
-//         type: Sequelize.INTEGER,
-//         primaryKey: true, // use "project_id" as a primary key
-//         autoIncrement: true // automatically increment the value
-//     },
-//     title: Sequelize.STRING,
-//     description: Sequelize.TEXT
-// }, {
-//     createdAt: false, // disable createdAt
-//     updatedAt: false // disable updatedAt
-// });
-
-// synchronize the Database with our models and automatically add the 
-// table if it does not exist
-
-// sequelize.sync().then(function () {
-
-//     // create a new "Project" and add it to the database
-//     Project.create({
-//         title: 'Project1',
-//         description: 'First Project'
-//     }).then(function (project) {
-//         // you can now access the newly created Project via the variable project
-//         console.log("success!")
-//     }).catch(function (error) {
-//         console.log("something went wrong!");
-//     });
-// });
 
 app.use(function (req, res, next) {
     let route = req.baseUrl + req.path;
